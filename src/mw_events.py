@@ -16,6 +16,13 @@ class Events():
 			self.create_group(event_data = J)
 		if J['event_type'] == 'Shotgun_Sequence_New':
 			#self.saved_event_data = event
+			if self.saved_event_data:
+				if self.process_event(self.saved_event_data)['event_type'] == 'Shotgun_Asset_New':
+					print ' this sequence has been created from an asset creation, move along'
+				elif self.process_event(self.saved_event_data)['event_type'] == 'Shotgun_Task_New':
+					print ' task was created, has no effect'
+				else:
+					print ' this sequence has been craeted on an already existing asset, adjuste accordingly'
 			self.saved_event_data = False
 			self.update_tags(event_data = J)
 		if J['event_type'] == 'Shotgun_Shot_New':
@@ -23,6 +30,7 @@ class Events():
 			self.saved_event_data = J
 			self.update_tags(event_data = J)
 		if J['event_type'] == 'Shotgun_Task_New':
+			self.saved_event_data = event #testing this, remove it everything gets broekn
 			self.update_tags(event_data = J)
 		if J['event_type'] == 'Shotgun_Asset_Change':
 			if J['attribute_name'] == 'sg_asset_type':
@@ -60,7 +68,7 @@ class Events():
 			return new_tag_list
 	def update_tags(self, event_data):
 		if 'meta_new_value' in event_data:
-			print 'Asset Name Changed - Updating Tags for shots and sequences'
+			print 'Asset Name Changed or Added - Updating Tags for shots and sequences'
 			proj = sg.find_one('Project', [['name', 'is', event_data['project_name'] ] ], fields = ['name', 'id'])
 			shots = sg.find('Shot', filters= [['project', 'is', {'type':'Project', 'id':proj['id']}]], fields = ['code', 'id', 'tag_list'])
 			sequences = sg.find('Sequence', filters= [['project', 'is', {'type':'Project', 'id':proj['id']}]], fields = ['code', 'id', 'tag_list'])
@@ -75,7 +83,7 @@ class Events():
 				if event_data['meta_old_value'] in i['tag_list']:
 					sg.update('Task', i['id'], {'tag_list' : self.processTags(i['tag_list'], event_data['meta_old_value'], event_data['meta_new_value']) } ) 
 		elif event_data['event_type'] == 'Shotgun_Shot_New':
-			print 'Shot Created - Updating Tags'
+			#print 'Shot Created - Updating Tags'
 			# Find the shot via the meta ID. Return ID, CODE, and ASSETS
 			shot = sg.find_one('Shot', [['id', 'is', event_data['meta_entity_id']]], fields = ['id', 'code', 'assets'])
 			for i in shot['assets']:
@@ -84,14 +92,8 @@ class Events():
 					sg.update('Shot', shot['id'], {'tag_list' : [tag]} )
 			# UPDATE THE TASKS THAT ARE AUTOMATICALLY CREATED FOR THE SHOT
 			tasks = sg.find_one('Shot', [['code', 'is', event_data['entity_name']] ] , fields = ['name', 'id', 'tasks'])
-			for i in tasks['tasks']:
-				print 'testing timeout'
-				if i['name'] != []:
-					tag = i['name']
-			    	print tag
-			    	#sg.update('Task', i['id'], {'tag_list' : [tag]} )
 		elif event_data['event_type'] == 'Shotgun_Sequence_New':
-			print 'Sequence Created - Updating Tags'
+			#print 'Sequence Created - Updating Tags'
 			# Find the shot via the meta ID. Return ID, CODE, and ASSETS
 			sequence = sg.find_one('Sequence', [['id', 'is', event_data['meta_entity_id']]], fields = ['id', 'code', 'assets'])
 			for i in sequence['assets']:
@@ -99,7 +101,7 @@ class Events():
 					tag = i['name']
 					sg.update('Sequence', sequence['id'], {'tag_list' : [tag]} )
 		elif event_data['event_type'] == 'Shotgun_Task_New':
-			print 'Task Created - Updating Tags'
+			#print 'Task Created - Updating Tags'
 			task = sg.find_one('Task', [['id', 'is', event_data['meta_entity_id']]], fields = ['id','code', 'entity']) # grab the task info
 			entity = task['entity'] # get the entity of that task to test if it's an asset or a shot/sequence.
 			tag = ''
@@ -114,7 +116,7 @@ class Events():
 				else:
 					tag = X[0]['name']
 			sg.update('Task', task['id'], {'tag_list' : [tag]} )
-			print 'Tag Updated -->', tag
+			print 'Updated->', '::', entity['name'], ' ', event_data['entity_name'] , '::', tag
 	def create_group(self, event_data):
 		print 'Creating Group for new asset'
 		group_name = event_data['entity_name']
@@ -154,17 +156,15 @@ class Events():
 		pad = '0'*amount
 		iteratorPadding = (pad[:len(pad)-len(str(data))] + str(int(data) ) )
 		return iteratorPadding
-	def create_sequence(self):
-		print 'placeholder'
+	def create_sequence(self, sequence_name, project, asset ):
+		#sequence = sg.create('Sequence', {'code':sequence_name,'project':project, 'assets':asset} )
+		print 'testing this sequence create area'
+		#sg.update('Sequence', sequence['id'], {'sg_sequence':sequence} )
+		#print 'creating sequence --> ', shot_name
 	def create_shot(self, shot_name, shot_type, sequence, project, asset ):
-		#project = sg.find_one('Sequence',  [['id', 'is', sequence_id ]], fields = ['project'])
-		#shot = sg.create('Shot', {'code':shot_name, 'project':project} )
-		#attach_sequence = # attach the shot to the sequence number now. 
-		#update_template = sg.update() # create this shot with a template at this point. Don't know how yet. 
 		shot = sg.create('Shot', {'code':shot_name, 'task_template':shot_type, 'sg_sequence':sequence , 'project':project, 'assets':asset} )
 		sg.update('Shot', shot['id'], {'sg_sequence':sequence} )
-		#sg.update('Shot')
-		print 'placeholder'
+		print 'creating shot --> ', shot_name
 	def create_cinematic(self, event_data = {}, asset_id = None, project_id = None, sequence_count = 2, shots_per_sequence = 2):
 		#print 'creating CINEMATIC'
 		for i in range(sequence_count):
