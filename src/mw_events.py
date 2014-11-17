@@ -15,14 +15,15 @@ class Events():
 			self.saved_event_data = event
 			self.create_group(event_data = J)
 		if J['event_type'] == 'Shotgun_Sequence_New':
+			print 'new setup sectioned'
 			#self.saved_event_data = event
-			if self.saved_event_data:
-				if self.process_event(self.saved_event_data)['event_type'] == 'Shotgun_Asset_New':
-					print ' this sequence has been created from an asset creation, move along'
-				elif self.process_event(self.saved_event_data)['event_type'] == 'Shotgun_Task_New':
-					print ' task was created, has no effect'
-				else:
-					print ' this sequence has been craeted on an already existing asset, adjuste accordingly'
+			#if self.saved_event_data:
+			#	if self.process_event(self.saved_event_data)['event_type'] == 'Shotgun_Asset_New':
+			#		print ' this sequence has been created from an asset creation, move along'
+			#	elif self.process_event(self.saved_event_data)['event_type'] == 'Shotgun_Task_New':
+			#		print ' task was created, has no effect'
+			#	else:
+			#		print ' this sequence has been craeted on an already existing asset, adjuste accordingly'
 			self.saved_event_data = False
 			self.update_tags(event_data = J)
 		if J['event_type'] == 'Shotgun_Shot_New':
@@ -165,7 +166,7 @@ class Events():
 		shot = sg.create('Shot', {'code':shot_name, 'task_template':shot_type, 'sg_sequence':sequence , 'project':project, 'assets':asset} )
 		sg.update('Shot', shot['id'], {'sg_sequence':sequence} )
 		print 'creating shot --> ', shot_name
-	def create_cinematic(self, event_data = {}, asset_id = None, project_id = None, sequence_count = 2, shots_per_sequence = 2):
+	def create_cinematic(self, event_data = {}, asset_id = None, project_id = None, sequence_count = 3, shots_per_sequence = 8):
 		#print 'creating CINEMATIC'
 		for i in range(sequence_count):
 			count = self.create_padding(data = 1+i, amount = 2) # add in the +1 on top so sc starts at 01
