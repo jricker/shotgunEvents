@@ -190,15 +190,58 @@ class Events():
 				#print shot_name, ' -->', ' this is shot_name'
 				self.create_shot(
 					shot_name = shot_name, 
-					shot_type = {'type':'TaskTemplate','id': 15 ,'name': 'Cinematic shot template'}, 
+					shot_type = {'type':'TaskTemplate','id': 15 ,'name': 'Cinematic Shots'}, 
 					sequence = sequence, 
 					project = project,
 					asset = [asset]
 					)
 		self.saved_event_data = False # reset data
-	def create_cinematic_trailer(self, event_data, asset_name):
-		print 'creating CINEMATIC TRAILER'
-		self.saved_event_data = False
+	def create_cinematic_trailer(self, event_data = {}, asset_id = None, project_id = None, sequence_count = 5, shots_per_sequence = 8):
+		for i in range(sequence_count):
+			count = self.create_padding(data = 1+i, amount = 2) # add in the +1 on top so sc starts at 01
+			asset = sg.find_one('Asset', [['id', 'is', asset_id]] ,fields = ['code'])
+			sequence_name = asset['code']+'_sc' + count
+			project = sg.find_one('Project', [['id', 'is', project_id]] )
+			sequence = sg.create('Sequence', {'code':sequence_name, 'project':project, 'assets':[asset]} )
+			for x in range(shots_per_sequence):
+				padding = self.create_padding(data = 10+x*10, amount= 3)
+				shot_name = sequence_name + '_sh'+ padding
+				self.create_shot(
+					shot_name = shot_name, 
+					shot_type = {'type':'TaskTemplate','id': 15 ,'name': 'Cinematic Shots'}, 
+					sequence = sequence, 
+					project = project,
+					asset = [asset]
+					)
+		self.saved_event_data = False # reset data
+	def create_dev_diary(self, event_data = {}, asset_id = None, project_id = None, sequence_count = 2, shots_per_sequence = 1):
+		for i in range(sequence_count):
+			count = self.create_padding(data = 1+i, amount = 2) # add in the +1 on top so sc starts at 01
+			asset = sg.find_one('Asset', [['id', 'is', asset_id]] ,fields = ['code'])
+			if i+1 == 1:
+				sequence_name = asset['code']+'_sc' + count
+				shot_type = 'Cinematic Shots'
+				shot_type_id = 15
+			elif i+1 ==2:
+				sequence_name = asset['code']+'_sc' + count
+				shot_type = 'Mograph Shots'
+				shot_type_id = 20
+			else:
+				shot_type = 'Cinematic Shots'
+				shot_type_id = 15
+			project = sg.find_one('Project', [['id', 'is', project_id]] )
+			sequence = sg.create('Sequence', {'code':sequence_name, 'project':project, 'assets':[asset]} )
+			for x in range(shots_per_sequence):
+				padding = self.create_padding(data = 10+x*10, amount= 3)
+				shot_name = sequence_name + '_sh'+ padding
+				self.create_shot(
+					shot_name = shot_name, 
+					shot_type = {'type':'TaskTemplate','id': shot_type_id ,'name': shot_type}, 
+					sequence = sequence, 
+					project = project,
+					asset = [asset]
+					)
+		self.saved_event_data = False # reset data
 	def create_screenshot(self, event_data, asset_name):
 		print 'creating SCREENSHOTS'
 		self.saved_event_data = False
@@ -208,31 +251,30 @@ class Events():
 	def create_walkthrough(self, event_data, asset_name):
 		print 'creating WALKTHROUGH'
 		self.saved_event_data = False
-	def create_dev_diary(self, event_data, asset_name):
-		print 'creating DEV DIARY'
-		self.saved_event_data = False
 	def create_insider_access(self, event_data, asset_name):
 		print 'creating INSIDER ACCESS'
 		self.saved_event_data = False
 	def find_asset_template(self, event_data):
 		asset_type = event_data['meta_new_value']
-		asset = sg.find_one('Asset', [['id', 'is', event_data['meta_entity_id']] ], fields = ['code'])
+		asset = sg.find_one('Asset', [['id', 'is', event_data['meta_entity_id']] ], fields = ['code', 'sg_create_default'])
+		default = asset['sg_create_default']
 		project_id = event_data['project_id']
 		asset_id = asset['id']
-		if asset_type == 'Cinematic':
-			self.create_cinematic(event_data, asset_id, project_id)
-		elif asset_type == 'Cinematic Trailer':
-			self.create_cinematic_trailer(event_data, asset_name)
-		elif asset_type == 'Developer Diary':
-			self.create_dev_diary(event_data, asset_name)
-		elif asset_type == 'Insider Access':
-			self.create_insider_access(event_data, asset_name)
-		elif asset_type == 'Walkthrough':
-			self.create_walkthrough(event_data, asset_name)
-		elif asset_type == 'TVC':
-			self.create_TVC(event_data, asset_name)
-		elif asset_type == 'Screenshots':
-			self.create_screenshot(event_data, asset_name)
+		if default == 'y':
+			if asset_type == 'Cinematic':
+				self.create_cinematic(event_data, asset_id, project_id)
+			elif asset_type == 'Cinematic Trailer':
+				self.create_cinematic_trailer(event_data, asset_id, project_id)
+			elif asset_type == 'Developer Diary':
+				self.create_dev_diary(event_data, asset_id, project_id)
+			###################################################elif asset_type == 'Insider Access':
+			###################################################	self.create_insider_access(event_data, asset_name)
+			###################################################elif asset_type == 'Walkthrough':
+			###################################################	self.create_walkthrough(event_data, asset_name)
+			###################################################elif asset_type == 'TVC':
+			###################################################	self.create_TVC(event_data, asset_name)
+			###################################################elif asset_type == 'Screenshots':
+			###################################################	self.create_screenshot(event_data, asset_name)
 #	def find_sequence_template(self, event_data):
 #		asset_type = event_data['meta_new_value']
 #		asset = sg.find_one('Asset', [['id', 'is', event_data['meta_entity_id']] ], fields = ['code'])
