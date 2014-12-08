@@ -165,7 +165,21 @@ class Events():
 	def create_shot(self, shot_name, shot_type, sequence, project, asset ):
 		shot = sg.create('Shot', {'code':shot_name, 'task_template':shot_type, 'sg_sequence':sequence , 'project':project, 'assets':asset} )
 		sg.update('Shot', shot['id'], {'sg_sequence':sequence} )
+		sg.update('Shot', shot['id'], {'sg_shot_category':self.check_shot_type(shot_type['name'])} )
 		print 'creating shot --> ', shot_name
+	def check_shot_type(self, shot_type):
+		X = 'na'
+		if shot_type == 'Mograph Shots':
+			X = 'mogrph'
+		elif shot_type == 'Cinematic Shots':
+			X = 'cinem'
+		elif shot_type == 'Editing Shots':
+			X = 'edit'
+		elif shot_type == 'Gameplay Shots':
+			X = 'gmp'
+		elif shot_type == 'LiveAction Shots':
+			X = 'live'
+		return X 
 	def create_cinematic(self, event_data = {}, asset_id = None, project_id = None, sequence_count = 3, shots_per_sequence = 8):
 		#print 'creating CINEMATIC'
 		for i in range(sequence_count):
@@ -237,7 +251,7 @@ class Events():
 				self.create_shot(
 					shot_name = shot_name, 
 					shot_type = {'type':'TaskTemplate','id': shot_type_id ,'name': shot_type}, 
-					sequence = sequence, 
+					sequence = sequence,
 					project = project,
 					asset = [asset]
 					)

@@ -4,7 +4,7 @@ For detailed information please see
 http://shotgunsoftware.github.com/shotgunEvents/api.html
 """
 import logging
-
+import mw_shotgun_keys
 
 def registerCallbacks(reg):
     """Register all necessary or appropriate callbacks for this plugin."""
@@ -31,7 +31,7 @@ def registerCallbacks(reg):
     #
     #eventFilter = {'Shotgun_Task_Change': ['sg_status_list']}
     eventFilter = None
-    reg.registerCallback('script_name', '0000', logArgs, eventFilter, None)
+    reg.registerCallback(mw_shotgun_keys.scriptName, mw_shotgun_keys.scriptKey, logArgs, eventFilter, None)
 
     # Set the logging level for this particular plugin. Let error and above
     # messages through but block info and lower. This is particularly usefull
